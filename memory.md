@@ -16,22 +16,27 @@
 - API conventions: `{ data }` / `{ error: { code, message, requestId, details? } }` envelopes, `X-Request-Id` on responses, centralized error handler, Zod validation middleware, explicit CORS allowlist, Helmet, rate limiting.
 - Pino redacts authorization, cookies, tokens, and password fields. Prisma client is a per-process singleton with clean disconnect on shutdown.
 - Frontend uses React Router, TanStack Query, Tailwind 4 tokens, Radix primitives, typed in-memory-token API client with single refresh retry on 401. `buttonVariants`/`badgeVariants` are in separate modules for Fast Refresh.
+- Git: repository initialized on `main`; `origin` is the GitHub URL supplied by the user; three commits pushed. CI is in `.github/workflows/ci.yml` and runs on every push and pull request.
+- Playwright `webServer` must use `pnpm exec vite --host 127.0.0.1`; the earlier `pnpm dev -- --host ...` form caused a CI timeout.
 - `/architect` writes a spec and stops for explicit approval. `/develop` implements the approved spec, creates/updates tests, runs relevant checks, and inspects the final diff.
 - `/develop` is adaptive; independent review is reserved for critical/high-risk changes, while `/review` always requests it.
 
 ## Feature progress
-- Feature 1: verified foundation; stack, workspace layout, commands, environment, and blockers recorded in `docs/architecture/baseline.md`. DB connectivity and migrations verified; Playwright E2E and manual browser review not performed.
+- Feature 1: verified foundation; evidence in `docs/architecture/baseline.md`. Install, startup, DB connectivity, migration status, tests, lint, type-check, and build verified; E2E not run locally.
 - Feature 2: implemented API foundation (versioned routes, config validation, middleware, logging, health/readiness, CORS/security/rate limits).
 - Feature 3: implemented database foundation (Prisma 7 + MariaDB adapter, initial migration, idempotent seed, shadow/test DB workflows, clean shutdown).
 - Feature 4: implemented React foundation (routing, layouts, API client, query cache, design tokens, accessible primitives, page states).
+- Feature 5: not started. No spec, no approval, no implementation.
 
 ## Current task / latest handoff
-- Status: Foundation complete and verified locally.
-- Summary: All install, migration, lint, typecheck, format, build, unit/integration test, API runtime, and web preview checks passed. Next feature must start with an approved spec.
-- Files changed: root workspace/tooling; `apps/api` (config, lib, middleware, routes, Prisma schema/config/seed/migration, tests); `apps/web` (app router/providers, components, pages, features, lib, tests, e2e, Playwright config); `README.md`; `docs/architecture/baseline.md`; `docs/ui-registry.md`; `memory.md`.
-- Tests/checks (2026-11-26): `pnpm lint` passed; `pnpm typecheck` passed; `pnpm format:check` passed; `pnpm build` passed (bundle-size advisory only); `pnpm test` passed (API 17/17 incl. real MariaDB integration, web 10/10); `pnpm db:deploy`/`db:status`/`db:seed`/`db:migrate`/`db:migrate:test`/`db:status:test` all passed; built API readiness returned `database: ok`; Vite preview returned HTTP 200.
-- Blockers/open questions: Playwright browser binaries not installed, so `pnpm test:e2e` is unverified. Manual responsive/device review not performed. XAMPP `mysql.db` privilege table was corrupt; repaired with approval, but `FLUSH PRIVILEGES` still reports an Aria checksum error while GRANTs and connections work.
-- Next recommended step: `/architect Feature 5` (authentication and account lifecycle), then wait for explicit approval before implementation. Add CSRF protection for cookie-based refresh/logout endpoints in that feature.
+- Status: Foundation complete, committed, pushed, and locally verified. No active feature spec; no `docs/specs/*.md` files found. No feature approval for Feature 5 has been given.
+- Summary: Added setup guide, Git history, CI workflow, architecture baseline, and a Playwright CI host-binding fix. All local checks passed; first CI run failed only on the webServer host binding and the fix was pushed, but the rerun result has not been checked by the agent.
+- Files changed in this handoff: `docs/GETTING_STARTED.md`, `README.md` (link), `.github/workflows/ci.yml`, `docs/architecture/baseline.md`, `apps/web/playwright.config.ts`. Earlier foundation paths are described in `docs/architecture/baseline.md`.
+- Agent-run checks (2026-11-26, exact outcomes): `pnpm lint` passed; `pnpm typecheck` passed; `pnpm format:check` passed; `pnpm build` passed (Vite >500 kB chunk advisory only); `pnpm test` passed with API 17/17 (including real MariaDB integration) and web 10/10; `pnpm db:status` and `pnpm db:status:test` both reported up to date; `prisma validate` passed for both configs; built API health returned `status: ok` and readiness returned `database: ok`; Vite preview returned HTTP 200/title `TaskForge`; the new Playwright webServer command was verified locally to bind `127.0.0.1:5173` and return HTTP 200.
+- Git evidence: commits `dd39804`, `d1f74ff`, `1e74e9a` pushed to `main`; `git status --short` clean at save time.
+- User-reported manual verification: none recorded in this conversation.
+- Blockers/open questions: Playwright browser binaries are absent locally, so `pnpm test:e2e` was not run locally. The CI rerun after commit `1e74e9a` is unverified by the agent. Manual browser/device responsive review was not performed. XAMPP `mysql.db` privilege table was corrupt; repaired with approval, but `FLUSH PRIVILEGES` still reports an Aria checksum error while GRANTs and connections work.
+- Next concrete action: check the GitHub Actions result for commit `1e74e9a`. If green, run `/architect Feature 5` (authentication and account lifecycle) and wait for explicit approval before implementation; add CSRF protection for cookie-based refresh/logout endpoints in that feature.
 
 ## Durable notes
 - Save only confirmed decisions, important file paths, meaningful test results, known issues, and next steps.
