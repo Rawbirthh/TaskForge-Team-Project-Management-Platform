@@ -1,0 +1,11 @@
+---
+name: prisma-mysql
+description: Design Prisma schemas, MySQL migrations, relations, constraints, indexes, transactions, and efficient queries
+compatibility: opencode
+---
+
+Inspect Prisma/MySQL versions, `schema.prisma`, migrations, generated client conventions, connection setup, and existing query patterns. Use Prisma Migrate for tracked schema evolution. Never edit an applied migration; create a new migration and review the generated SQL. Ask before reset, drop, wipe, or shared/production schema/data operations.
+
+Define relations, foreign keys, nullable semantics, unique constraints, deletion behavior, and indexes intentionally. For tenant-owned data, put the tenant ID in unique and index strategy (for example `(workspaceId, projectId, statusId)`), keep child records consistent with their parent's tenant, and make generated keys (such as task keys) concurrency-safe and unique within the agreed scope. Where Prisma cannot express a required constraint, use a reviewed SQL migration and document it. Verify that the migration creates the needed MySQL constraints/indexes. Add indexes based on real foreign-key access paths and filters/orderings; avoid duplicates and speculative composites. Use explicit `select` and map results to public DTOs; do not return Prisma records wholesale. Paginate endpoint lists and enforce a maximum page size. Avoid unbounded `findMany()`, per-row query loops, and N+1 patterns.
+
+Use `$transaction` for atomic multi-write invariants. Consider uniqueness/concurrency, transaction isolation, idempotency, and after-commit side effects. Use exact Decimal types for monetary data, not floating point. Consider time-zone and date semantics explicitly. Inspect query logs and `EXPLAIN`/`EXPLAIN ANALYZE` for important query paths when supported. Do not promise a user scale without load evidence. For durable business entities, default to a nullable `deletedAt`/soft-delete convention unless privacy/legal erasure, ephemeral data, or relationship/uniqueness semantics provide a concrete reason for hard deletion. If `project-overview.md` already defines the lifecycle (archive status, retention, tombstones, permanent deletion), follow it and do not add `deletedAt` on top without a recorded spec decision. Ensure queries and uniqueness rules account for soft-deleted rows; do not add it blindly to technical/ephemeral tables.

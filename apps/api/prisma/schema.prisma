@@ -1,0 +1,18 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+/// Infrastructure-only table used to verify migrations, seed repeatability, and
+/// database readiness. It is not a product entity.
+model SystemSetting {
+  key       String   @id @db.VarChar(100)
+  value     String   @db.VarChar(500)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}

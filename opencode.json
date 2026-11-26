@@ -1,0 +1,335 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "build",
+  "experimental": {
+    "subagent_depth": 1
+  },
+  "compaction": {
+    "auto": true,
+    "keep": {
+      "tokens": 10000
+    }
+  },
+  "permissions": [
+    {
+      "action": "*",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "external_directory",
+      "resource": "*",
+      "effect": "ask"
+    },
+    {
+      "action": "read",
+      "resource": "*.env",
+      "effect": "ask"
+    },
+    {
+      "action": "read",
+      "resource": "*.env.*",
+      "effect": "ask"
+    },
+    {
+      "action": "read",
+      "resource": "*.env.example",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git push*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "git reset --hard*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "git clean*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "git checkout --*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "git restore*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "rm -rf*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "Remove-Item*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "del *",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "sudo *",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "npm install*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "npm i *",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm add*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "yarn add*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "bun add*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "npm update*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm update*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "yarn upgrade*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "bun update*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "npx prisma migrate reset*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm exec prisma migrate reset*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "npm run db:reset*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "npx prisma db push*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm exec prisma db push*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "npx prisma migrate deploy*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm exec prisma migrate deploy*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "npm publish*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "npm ci*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm install*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "yarn install*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "bun install*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "npm i",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm exec prisma migrate dev*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "npx prisma migrate dev*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "npm exec prisma migrate dev*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "npx prisma db seed*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm exec prisma db seed*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "aws *",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "npx playwright install*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm exec playwright install*",
+      "effect": "ask"
+    }
+  ],
+  "agents": {
+    "backend-engineer": {
+      "description": "Express, TypeScript, Zod, Prisma, MySQL, API, authentication, and backend implementation specialist",
+      "mode": "subagent"
+    },
+    "frontend-engineer": {
+      "description": "React, TypeScript, Vite, routing, server-state, accessibility, and UI implementation specialist",
+      "mode": "subagent"
+    },
+    "test-engineer": {
+      "description": "Writes focused API, database, realtime, component, and end-to-end tests",
+      "mode": "subagent"
+    },
+    "code-reviewer": {
+      "description": "Independent read-only reviewer for correctness, security, data integrity, performance, and test coverage",
+      "mode": "subagent",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "ask"
+        },
+        {
+          "action": "shell",
+          "resource": "git status*",
+          "effect": "allow"
+        },
+        {
+          "action": "shell",
+          "resource": "git diff*",
+          "effect": "allow"
+        },
+        {
+          "action": "shell",
+          "resource": "git log*",
+          "effect": "allow"
+        },
+        {
+          "action": "shell",
+          "resource": "npm test*",
+          "effect": "allow"
+        },
+        {
+          "action": "shell",
+          "resource": "npm run test*",
+          "effect": "allow"
+        },
+        {
+          "action": "shell",
+          "resource": "pnpm test*",
+          "effect": "allow"
+        },
+        {
+          "action": "shell",
+          "resource": "pnpm run test*",
+          "effect": "allow"
+        },
+        {
+          "action": "shell",
+          "resource": "bun test*",
+          "effect": "allow"
+        },
+        {
+          "action": "shell",
+          "resource": "bun run test*",
+          "effect": "allow"
+        }
+      ]
+    },
+    "build": {
+      "mode": "primary",
+      "permissions": [
+        {
+          "action": "subagent",
+          "resource": "backend-engineer",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "frontend-engineer",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "test-engineer",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "code-reviewer",
+          "effect": "allow"
+        }
+      ]
+    }
+  }
+}

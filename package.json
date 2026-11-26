@@ -1,0 +1,44 @@
+{
+  "name": "taskforge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "TaskForge — multi-tenant team project management platform",
+  "packageManager": "pnpm@12.23.0",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=12.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "dev:api": "pnpm --filter @taskforge/api dev",
+    "dev:web": "pnpm --filter @taskforge/web dev",
+    "build": "pnpm --filter @taskforge/api build && pnpm --filter @taskforge/web build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "pnpm -r test",
+    "test:e2e": "pnpm --filter @taskforge/web test:e2e",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @taskforge/api db:generate",
+    "db:migrate": "pnpm --filter @taskforge/api db:migrate",
+    "db:deploy": "pnpm --filter @taskforge/api db:deploy",
+    "db:seed": "pnpm --filter @taskforge/api db:seed",
+    "db:status": "pnpm --filter @taskforge/api db:status",
+    "db:migrate:test": "pnpm --filter @taskforge/api db:migrate:test",
+    "db:status:test": "pnpm --filter @taskforge/api db:status:test",
+    "db:studio": "pnpm --filter @taskforge/api db:studio"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.8",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.74.0"
+  }
+}
