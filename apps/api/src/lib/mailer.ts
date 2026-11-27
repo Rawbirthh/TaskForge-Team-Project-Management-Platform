@@ -30,7 +30,6 @@ const disabledMailer: Mailer = {
 };
 
 async function sendSmtpMail(to: string, subject: string, text: string): Promise<void> {
-  // @ts-expect-error - optional dependency, installed only when SMTP adapter is used
   const imported = (await import('nodemailer')) as unknown;
   const nodemailer = imported as {
     createTransport: (config: unknown) => { sendMail: (mail: unknown) => Promise<unknown> };

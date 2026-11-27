@@ -43,10 +43,12 @@ export function ForgotPasswordPage() {
               </label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 required
-                value={email}
+                defaultValue={email}
                 onChange={(event) => setEmail(event.target.value)}
+                onFocus={(event) => setEmail(event.target.value)}
                 autoComplete="email"
               />
             </div>

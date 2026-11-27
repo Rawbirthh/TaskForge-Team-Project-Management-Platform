@@ -42,10 +42,12 @@ export function LoginPage() {
               </label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 required
-                value={email}
+                defaultValue={email}
                 onChange={(event) => setEmail(event.target.value)}
+                onFocus={(event) => setEmail(event.target.value)}
                 autoComplete="email"
               />
             </div>
@@ -55,10 +57,12 @@ export function LoginPage() {
               </label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 required
-                value={password}
+                defaultValue={password}
                 onChange={(event) => setPassword(event.target.value)}
+                onFocus={(event) => setPassword(event.target.value)}
                 autoComplete="current-password"
               />
             </div>

@@ -9,7 +9,8 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet } from 'react-router';
+import { NavLink, Outlet, useNavigate } from 'react-router';
+import { useAuth } from '@/features/auth/auth-context';
 import { Brand } from '@/components/brand';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,7 +40,14 @@ const navItems: NavItem[] = [
 ];
 
 export function AppShell() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [isNavOpen, setIsNavOpen] = useState(false);
+
+  async function handleSignOut() {
+    await logout();
+    void navigate('/login', { replace: true });
+  }
 
   useEffect(() => {
     if (!isNavOpen) {
@@ -176,10 +184,16 @@ export function AppShell() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Account</DropdownMenuLabel>
-                <DropdownMenuItem disabled>Authentication arrives in Feature 5</DropdownMenuItem>
+                <DropdownMenuLabel>{user?.displayName ?? 'Account'}</DropdownMenuLabel>
+                {user?.email ? (
+                  <DropdownMenuItem disabled className="text-muted">
+                    {user.email}
+                  </DropdownMenuItem>
+                ) : null}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem disabled>Sign out</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => void handleSignOut()}>
+                  Sign out
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </header>

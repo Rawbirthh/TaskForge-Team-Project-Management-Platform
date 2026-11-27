@@ -43,8 +43,10 @@ export function RegisterPage() {
               </label>
               <Input
                 id="displayName"
-                value={displayName}
+                name="displayName"
+                defaultValue={displayName}
                 onChange={(event) => setDisplayName(event.target.value)}
+                onFocus={(event) => setDisplayName(event.target.value)}
                 autoComplete="name"
               />
             </div>
@@ -54,10 +56,12 @@ export function RegisterPage() {
               </label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 required
-                value={email}
+                defaultValue={email}
                 onChange={(event) => setEmail(event.target.value)}
+                onFocus={(event) => setEmail(event.target.value)}
                 autoComplete="email"
               />
             </div>
@@ -67,11 +71,13 @@ export function RegisterPage() {
               </label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 required
                 minLength={12}
-                value={password}
+                defaultValue={password}
                 onChange={(event) => setPassword(event.target.value)}
+                onFocus={(event) => setPassword(event.target.value)}
                 autoComplete="new-password"
               />
             </div>

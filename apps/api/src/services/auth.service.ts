@@ -8,6 +8,7 @@ import {
   verifyAccessToken,
 } from '../lib/tokens.js';
 import { mailer } from '../lib/mailer.js';
+import { logger } from '../lib/logger.js';
 import { env } from '../config/env.js';
 import { AppError } from '../errors/app-error.js';
 
@@ -136,7 +137,9 @@ export async function registerUser(input: {
   });
 
   // Send verification email after commit.
-  void mailer.sendVerificationEmail(result.user.email, verification.raw).catch(() => undefined);
+  void mailer.sendVerificationEmail(result.user.email, verification.raw).catch((error) => {
+    logger.error({ err: error }, 'Failed to send verification email');
+  });
 
   return {
     accessToken,
@@ -340,7 +343,9 @@ export async function requestPasswordReset(input: { email: string }): Promise<vo
     },
   });
 
-  void mailer.sendPasswordResetEmail(user.email, token.raw).catch(() => undefined);
+  void mailer.sendPasswordResetEmail(user.email, token.raw).catch((error) => {
+    logger.error({ err: error }, 'Failed to send password reset email');
+  });
 }
 
 export async function resetPassword(input: { token: string; password: string }): Promise<void> {
@@ -428,7 +433,9 @@ export async function resendVerification(userId: string): Promise<void> {
     },
   });
 
-  void mailer.sendVerificationEmail(user.email, token.raw).catch(() => undefined);
+  void mailer.sendVerificationEmail(user.email, token.raw).catch((error) => {
+    logger.error({ err: error }, 'Failed to send verification email');
+  });
 }
 
 export async function getPublicUser(userId: string): Promise<PublicUser> {

@@ -46,11 +46,13 @@ export function ResetPasswordPage() {
               </label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 required
                 minLength={12}
-                value={password}
+                defaultValue={password}
                 onChange={(event) => setPassword(event.target.value)}
+                onFocus={(event) => setPassword(event.target.value)}
                 autoComplete="new-password"
               />
             </div>
