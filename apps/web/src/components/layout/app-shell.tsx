@@ -191,9 +191,7 @@ export function AppShell() {
                   </DropdownMenuItem>
                 ) : null}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => void handleSignOut()}>
-                  Sign out
-                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => void handleSignOut()}>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </header>
