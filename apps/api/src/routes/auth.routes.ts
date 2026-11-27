@@ -27,7 +27,10 @@ export const authRouter = Router();
 
 authRouter.post('/register', authRateLimiter, requireVerifiedOrigin, ...authController.register);
 authRouter.post('/login', authRateLimiter, requireVerifiedOrigin, ...authController.login);
-authRouter.post('/refresh', authRateLimiter, requireVerifiedOrigin, ...authController.refresh);
+// Routine page reloads call /refresh. The rotating opaque cookie, reuse detection,
+// and the global /api/v1 limiter already bound this endpoint; the stricter
+// credential limiter is reserved for login/register.
+authRouter.post('/refresh', requireVerifiedOrigin, ...authController.refresh);
 authRouter.post('/logout', ...authController.logout);
 authRouter.post('/forgot-password', authRateLimiter, ...authController.forgotPassword);
 authRouter.post('/reset-password', authRateLimiter, ...authController.resetPassword);

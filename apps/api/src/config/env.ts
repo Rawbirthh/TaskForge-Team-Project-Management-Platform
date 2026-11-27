@@ -61,6 +61,7 @@ export const envSchema = z
     REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(30).default(7),
     PASSWORD_RESET_TOKEN_TTL_MINUTES: z.coerce.number().int().min(5).max(1440).default(60),
     EMAIL_VERIFICATION_TOKEN_TTL_HOURS: z.coerce.number().int().min(1).max(168).default(24),
+    EMAIL_CHANGE_TOKEN_TTL_HOURS: z.coerce.number().int().min(1).max(168).default(24),
     AUTH_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().min(1000).max(3_600_000).default(900_000),
     AUTH_RATE_LIMIT_MAX: z.coerce.number().int().min(1).max(100).default(10),
     MAIL_PROVIDER: z

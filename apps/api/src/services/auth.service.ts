@@ -16,7 +16,13 @@ export interface PublicUser {
   id: string;
   email: string;
   displayName: string;
+  timeZone: string;
+  locale: string | null;
+  avatarUrl: string | null;
+  pendingEmail: string | null;
   emailVerifiedAt: string | null;
+  deactivatedAt: string | null;
+  deletionRequestedAt: string | null;
   createdAt: string;
 }
 
@@ -35,14 +41,26 @@ function toPublicUser(user: {
   id: string;
   email: string;
   displayName: string;
+  timeZone: string;
+  locale: string | null;
+  avatarUrl: string | null;
+  pendingEmail: string | null;
   emailVerifiedAt: Date | null;
+  deactivatedAt: Date | null;
+  deletionRequestedAt: Date | null;
   createdAt: Date;
 }): PublicUser {
   return {
     id: user.id,
     email: user.email,
     displayName: user.displayName,
+    timeZone: user.timeZone,
+    locale: user.locale,
+    avatarUrl: user.avatarUrl,
+    pendingEmail: user.pendingEmail,
     emailVerifiedAt: user.emailVerifiedAt ? user.emailVerifiedAt.toISOString() : null,
+    deactivatedAt: user.deactivatedAt ? user.deactivatedAt.toISOString() : null,
+    deletionRequestedAt: user.deletionRequestedAt ? user.deletionRequestedAt.toISOString() : null,
     createdAt: user.createdAt.toISOString(),
   };
 }
@@ -81,7 +99,13 @@ export async function registerUser(input: {
       id: string;
       email: string;
       displayName: string;
+      timeZone: string;
+      locale: string | null;
+      avatarUrl: string | null;
+      pendingEmail: string | null;
       emailVerifiedAt: Date | null;
+      deactivatedAt: Date | null;
+      deletionRequestedAt: Date | null;
       createdAt: Date;
     };
     sessionId: string;
@@ -98,7 +122,13 @@ export async function registerUser(input: {
           id: true,
           email: true,
           displayName: true,
+          timeZone: true,
+          locale: true,
+          avatarUrl: true,
+          pendingEmail: true,
           emailVerifiedAt: true,
+          deactivatedAt: true,
+          deletionRequestedAt: true,
           createdAt: true,
         },
       });
@@ -161,13 +191,23 @@ export async function loginUser(input: {
       email: true,
       passwordHash: true,
       displayName: true,
+      timeZone: true,
+      locale: true,
+      avatarUrl: true,
+      pendingEmail: true,
       emailVerifiedAt: true,
+      deactivatedAt: true,
+      deletionRequestedAt: true,
       createdAt: true,
     },
   });
 
   if (!user) {
     throw new AppError(401, 'INVALID_CREDENTIALS', 'Invalid email or password');
+  }
+
+  if (user.deactivatedAt || user.deletionRequestedAt) {
+    throw new AppError(403, 'ACCOUNT_DEACTIVATED', 'Account is deactivated');
   }
 
   const valid = await verifyPassword(user.passwordHash, input.password);
@@ -445,7 +485,13 @@ export async function getPublicUser(userId: string): Promise<PublicUser> {
       id: true,
       email: true,
       displayName: true,
+      timeZone: true,
+      locale: true,
+      avatarUrl: true,
+      pendingEmail: true,
       emailVerifiedAt: true,
+      deactivatedAt: true,
+      deletionRequestedAt: true,
       createdAt: true,
     },
   });

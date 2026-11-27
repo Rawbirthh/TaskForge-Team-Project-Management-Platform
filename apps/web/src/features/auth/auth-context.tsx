@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
   const [isRestoring, setIsRestoring] = useState(true);
+  const restoreStarted = useRef(false);
 
   const refreshAccessToken = useCallback(async () => {
     try {
@@ -51,6 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [accessToken, refreshAccessToken]);
 
   useEffect(() => {
+    // StrictMode re-runs mount effects in development. A second refresh would
+    // replay the rotated cookie and revoke the session, so restore only once.
+    if (restoreStarted.current) return;
+    restoreStarted.current = true;
+
     void (async () => {
       await refreshAccessToken();
       setIsRestoring(false);

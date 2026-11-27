@@ -18,19 +18,40 @@ model SystemSetting {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  passwordHash    String    @map("password_hash")
-  displayName     String    @map("display_name")
-  emailVerifiedAt DateTime? @map("email_verified_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  passwordHash        String    @map("password_hash")
+  displayName         String    @map("display_name")
+  timeZone            String    @default("UTC") @map("time_zone") @db.VarChar(64)
+  locale              String?   @map("locale") @db.VarChar(35)
+  avatarUrl           String?   @map("avatar_url") @db.VarChar(500)
+  pendingEmail        String?   @unique @map("pending_email") @db.VarChar(254)
+  emailVerifiedAt     DateTime? @map("email_verified_at")
+  deactivatedAt       DateTime? @map("deactivated_at")
+  deletionRequestedAt DateTime? @map("deletion_requested_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
 
   sessions                Session[]
   passwordResetTokens     PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
+  emailChangeTokens       EmailChangeToken[]
 
   @@map("users")
+}
+
+model EmailChangeToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  newEmail  String    @map("new_email") @db.VarChar(254)
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("email_change_tokens")
 }
 
 model Session {
@@ -46,7 +67,7 @@ model Session {
   ipAddress                String?   @map("ip_address") @db.VarChar(64)
   createdAt                DateTime  @default(now()) @map("created_at")
 
-  @@index([userId])
+  @@index([userId, createdAt])
   @@index([expiresAt])
   @@map("sessions")
 }

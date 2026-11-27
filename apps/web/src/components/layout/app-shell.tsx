@@ -191,6 +191,9 @@ export function AppShell() {
                   </DropdownMenuItem>
                 ) : null}
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => void navigate('/app/profile')}>
+                  Profile & security
+                </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => void handleSignOut()}>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

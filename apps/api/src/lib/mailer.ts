@@ -3,6 +3,7 @@ import { env } from '../config/env.js';
 export interface Mailer {
   sendVerificationEmail(to: string, token: string): Promise<void>;
   sendPasswordResetEmail(to: string, token: string): Promise<void>;
+  sendEmailChangeEmail(to: string, token: string): Promise<void>;
 }
 
 function verificationLink(token: string): string {
@@ -11,6 +12,10 @@ function verificationLink(token: string): string {
 
 function resetLink(token: string): string {
   return `${env.APP_PUBLIC_URL}/reset-password?token=${encodeURIComponent(token)}`;
+}
+
+function emailChangeLink(token: string): string {
+  return `${env.APP_PUBLIC_URL}/verify-email-change?token=${encodeURIComponent(token)}`;
 }
 
 const consoleMailer: Mailer = {
@@ -22,11 +27,16 @@ const consoleMailer: Mailer = {
     console.info(`[mail:console] password reset link for ${to}: ${resetLink(token)}`);
     return Promise.resolve();
   },
+  sendEmailChangeEmail: (to, token) => {
+    console.info(`[mail:console] email change link for ${to}: ${emailChangeLink(token)}`);
+    return Promise.resolve();
+  },
 };
 
 const disabledMailer: Mailer = {
   sendVerificationEmail: () => Promise.resolve(),
   sendPasswordResetEmail: () => Promise.resolve(),
+  sendEmailChangeEmail: () => Promise.resolve(),
 };
 
 async function sendSmtpMail(to: string, subject: string, text: string): Promise<void> {
@@ -62,6 +72,12 @@ const smtpMailer: Mailer = {
       to,
       'Reset your TaskForge password',
       `Open this link to reset your password: ${resetLink(token)}`,
+    ),
+  sendEmailChangeEmail: (to, token) =>
+    sendSmtpMail(
+      to,
+      'Verify your new TaskForge email',
+      `Open this link to verify your new email address: ${emailChangeLink(token)}`,
     ),
 };
 

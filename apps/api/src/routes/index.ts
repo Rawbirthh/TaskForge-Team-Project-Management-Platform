@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { env } from '../config/env.js';
 import { healthRouter } from './health.routes.js';
 import { authRouter } from './auth.routes.js';
+import { usersRouter } from './users.routes.js';
 import { requireAuth } from '../middleware/auth.js';
 import { authController } from '../controllers/auth.controller.js';
 
@@ -20,4 +21,5 @@ apiRouter.get('/', (_req, res) => {
 
 apiRouter.use('/health', healthRouter);
 apiRouter.use('/auth', authRouter);
+apiRouter.use('/users', usersRouter);
 apiRouter.get('/me', requireAuth, ...authController.me);
