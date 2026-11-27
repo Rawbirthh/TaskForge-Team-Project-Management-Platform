@@ -3,6 +3,7 @@ import { envSchema } from '../src/config/env.js';
 
 const baseEnv = {
   DATABASE_URL: 'mysql://taskforge:secret@localhost:3306/taskforge',
+  JWT_ACCESS_SECRET: 'a'.repeat(32),
 };
 
 describe('environment schema', () => {

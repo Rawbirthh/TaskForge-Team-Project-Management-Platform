@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { AuthProvider } from '@/features/auth/auth-context';
 import { routes } from '@/app/routes';
 
 function renderRoute(path: string) {
@@ -54,12 +55,12 @@ describe('application routes', () => {
     const router = createMemoryRouter(routes, { initialEntries: ['/app'] });
     render(
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
       </QueryClientProvider>,
     );
 
-    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
-    expect(screen.getByText('Foundation status')).toBeInTheDocument();
-    expect(await screen.findByText('Online')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
   });
 });

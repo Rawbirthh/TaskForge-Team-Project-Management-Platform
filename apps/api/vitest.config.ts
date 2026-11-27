@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['tests/**/*.test.ts'],
+    setupFiles: ['tests/setup.ts'],
     clearMocks: true,
     restoreMocks: true,
     env: {
@@ -11,6 +12,8 @@ export default defineConfig({
       DATABASE_URL: 'mysql://taskforge:test@localhost:3306/taskforge_test',
       CORS_ORIGINS: 'http://localhost:5173',
       LOG_LEVEL: 'silent',
+      JWT_ACCESS_SECRET: 'a'.repeat(32),
+      MAIL_PROVIDER: 'console',
     },
     coverage: {
       provider: 'v8',

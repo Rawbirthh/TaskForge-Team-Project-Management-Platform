@@ -54,6 +54,24 @@ export const envSchema = z
       .default('false')
       .transform((value) => value === 'true'),
     APP_VERSION: z.string().min(1).max(50).default('0.1.0'),
+    JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
+    JWT_ISSUER: z.string().min(1).default('taskforge-api'),
+    JWT_AUDIENCE: z.string().min(1).default('taskforge-web'),
+    ACCESS_TOKEN_TTL_MINUTES: z.coerce.number().int().min(5).max(60).default(15),
+    REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(30).default(7),
+    PASSWORD_RESET_TOKEN_TTL_MINUTES: z.coerce.number().int().min(5).max(1440).default(60),
+    EMAIL_VERIFICATION_TOKEN_TTL_HOURS: z.coerce.number().int().min(1).max(168).default(24),
+    AUTH_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().min(1000).max(3_600_000).default(900_000),
+    AUTH_RATE_LIMIT_MAX: z.coerce.number().int().min(1).max(100).default(10),
+    MAIL_PROVIDER: z
+      .enum(['disabled', 'console', 'smtp'])
+      .default(process.env.NODE_ENV === 'production' ? 'disabled' : 'console'),
+    APP_PUBLIC_URL: z.string().url().default('http://localhost:5173'),
+    SMTP_HOST: z.string().min(1).optional(),
+    SMTP_PORT: z.coerce.number().int().min(1).max(65535).optional(),
+    SMTP_USER: z.string().min(1).optional(),
+    SMTP_PASSWORD: z.string().min(1).optional(),
+    SMTP_FROM: z.string().email().optional(),
   })
   .superRefine((value, ctx) => {
     if (
@@ -67,6 +85,30 @@ export const envSchema = z
         path: ['CORS_ORIGINS'],
         message: 'CORS_ORIGINS must be configured explicitly in production',
       });
+    }
+
+    if (value.MAIL_PROVIDER === 'smtp') {
+      if (!value.SMTP_HOST) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['SMTP_HOST'],
+          message: 'SMTP_HOST is required when MAIL_PROVIDER=smtp',
+        });
+      }
+      if (value.SMTP_PORT === undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['SMTP_PORT'],
+          message: 'SMTP_PORT is required when MAIL_PROVIDER=smtp',
+        });
+      }
+      if (!value.SMTP_FROM) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['SMTP_FROM'],
+          message: 'SMTP_FROM is required when MAIL_PROVIDER=smtp',
+        });
+      }
     }
   });
 

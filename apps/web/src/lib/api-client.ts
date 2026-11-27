@@ -16,6 +16,8 @@ const defaultAuthHooks: AuthHooks = {
 
 let authHooks: AuthHooks = { ...defaultAuthHooks };
 
+let refreshPromise: Promise<string | null> | null = null;
+
 export interface ApiErrorOptions {
   requestId?: string | undefined;
   details?: unknown;
@@ -65,6 +67,7 @@ export function configureAuthHooks(hooks: Partial<AuthHooks>): void {
 export function resetAuthHooks(): void {
   accessToken = null;
   authHooks = { ...defaultAuthHooks };
+  refreshPromise = null;
 }
 
 function toApiError(status: number, payload: unknown): ApiError {
@@ -109,6 +112,10 @@ function buildUrl(path: string): string {
   return `${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
+function isAuthEndpoint(path: string): boolean {
+  return path === '/auth/refresh' || path === '/auth/login' || path === '/auth/register';
+}
+
 async function sendRequest(
   url: string,
   options: ApiRequestOptions,
@@ -135,6 +142,26 @@ async function sendRequest(
   });
 }
 
+async function refreshAccessTokenOnce(): Promise<string | null> {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const refreshedToken = await authHooks.refreshAccessToken();
+      if (refreshedToken) {
+        setAccessToken(refreshedToken);
+      }
+      return refreshedToken;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
 /**
  * Typed fetch wrapper for the TaskForge API.
  *
@@ -146,10 +173,9 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   const url = buildUrl(path);
   let response = await sendRequest(url, options, authHooks.getAccessToken());
 
-  if (response.status === 401) {
-    const refreshedToken = await authHooks.refreshAccessToken();
+  if (response.status === 401 && !isAuthEndpoint(path)) {
+    const refreshedToken = await refreshAccessTokenOnce();
     if (refreshedToken) {
-      setAccessToken(refreshedToken);
       response = await sendRequest(url, options, refreshedToken);
     }
   }

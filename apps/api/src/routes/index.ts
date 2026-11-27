@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import { env } from '../config/env.js';
 import { healthRouter } from './health.routes.js';
+import { authRouter } from './auth.routes.js';
+import { requireAuth } from '../middleware/auth.js';
+import { authController } from '../controllers/auth.controller.js';
 
 export const apiRouter = Router();
 
@@ -16,3 +19,5 @@ apiRouter.get('/', (_req, res) => {
 });
 
 apiRouter.use('/health', healthRouter);
+apiRouter.use('/auth', authRouter);
+apiRouter.get('/me', requireAuth, ...authController.me);
