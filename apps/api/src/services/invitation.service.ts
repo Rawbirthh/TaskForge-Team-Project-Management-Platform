@@ -342,7 +342,15 @@ export async function acceptInvitation(
       if (membership) {
         const workspace = await prisma.workspace.findUnique({
           where: { id: invitation.workspaceId },
-          select: { id: true, name: true, slug: true, createdAt: true, updatedAt: true },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            logoUrl: true,
+            createdAt: true,
+            updatedAt: true,
+          },
         });
         if (!workspace) {
           throw new AppError(404, 'WORKSPACE_NOT_FOUND', 'Workspace not found');
@@ -352,6 +360,8 @@ export async function acceptInvitation(
             id: workspace.id,
             name: workspace.name,
             slug: workspace.slug,
+            description: workspace.description,
+            logoUrl: workspace.logoUrl,
             createdAt: workspace.createdAt,
             updatedAt: workspace.updatedAt,
           },
@@ -380,7 +390,15 @@ export async function acceptInvitation(
   // Transaction: create/reactivate membership + mark accepted.
   let result: {
     membership: { id: string; role: string; status: string };
-    workspace: { id: string; name: string; slug: string; createdAt: Date; updatedAt: Date } | null;
+    workspace: {
+      id: string;
+      name: string;
+      slug: string;
+      description: string | null;
+      logoUrl: string | null;
+      createdAt: Date;
+      updatedAt: Date;
+    } | null;
   };
   try {
     result = await prisma.$transaction(async (tx) => {
@@ -448,7 +466,15 @@ export async function acceptInvitation(
 
       const workspace = await tx.workspace.findUnique({
         where: { id: invitation.workspaceId },
-        select: { id: true, name: true, slug: true, createdAt: true, updatedAt: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          logoUrl: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       });
 
       return { membership, workspace };
@@ -462,7 +488,15 @@ export async function acceptInvitation(
       });
       const workspace = await prisma.workspace.findUnique({
         where: { id: invitation.workspaceId },
-        select: { id: true, name: true, slug: true, createdAt: true, updatedAt: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          logoUrl: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       });
       if (!membership || !workspace) {
         throw new AppError(400, 'INVALID_INVITATION_TOKEN', 'Invalid or expired invitation token');
@@ -486,6 +520,8 @@ export async function acceptInvitation(
       id: workspace.id,
       name: workspace.name,
       slug: workspace.slug,
+      description: workspace.description,
+      logoUrl: workspace.logoUrl,
       createdAt: workspace.createdAt,
       updatedAt: workspace.updatedAt,
     },

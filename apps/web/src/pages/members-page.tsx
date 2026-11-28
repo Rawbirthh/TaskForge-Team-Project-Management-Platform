@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router';
+import { Link, useParams } from 'react-router';
 import { useSelectedWorkspace } from '@/features/workspaces/selected-workspace-context';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getWorkspace } from '@/features/workspaces/workspace-api';
@@ -26,6 +26,10 @@ export function MembersPage() {
   const [inviteRole, setInviteRole] = useState<'MEMBER' | 'GUEST' | 'ADMIN'>('MEMBER');
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [isInviting, setIsInviting] = useState(false);
+  const [memberSearch, setMemberSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [memberPage, setMemberPage] = useState(1);
 
   // Keep the selected workspace in sync with the route (deep links / switches).
   useEffect(() => {
@@ -37,8 +41,22 @@ export function MembersPage() {
   const workspaceId = routeWorkspaceId ?? selectedWorkspaceId ?? undefined;
 
   const membersQuery = useQuery({
-    queryKey: ['workspace-members', workspaceId],
-    queryFn: () => listMembers(workspaceId!, 1, 50),
+    queryKey: [
+      'workspace-members',
+      workspaceId,
+      { page: memberPage, q: memberSearch, role: roleFilter, status: statusFilter },
+    ],
+    queryFn: () => {
+      const filters: Parameters<typeof listMembers>[3] = {};
+      if (memberSearch) filters.q = memberSearch;
+      if (roleFilter) {
+        filters.role = roleFilter as 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST';
+      }
+      if (statusFilter) {
+        filters.status = statusFilter as 'ACTIVE' | 'INVITED' | 'SUSPENDED' | 'REMOVED';
+      }
+      return listMembers(workspaceId!, memberPage, 20, filters);
+    },
     enabled: Boolean(workspaceId),
   });
 
@@ -144,11 +162,80 @@ export function MembersPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold text-ink">Workspace members</h1>
+        {canChangeRole ? (
+          <Link
+            className="text-sm text-brand hover:underline"
+            to={`/app/workspaces/${workspaceId}/settings`}
+          >
+            Workspace settings
+          </Link>
+        ) : null}
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Members</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 flex flex-wrap items-end gap-3">
+            <div className="space-y-1">
+              <label htmlFor="member-search" className="text-sm font-medium text-ink">
+                Search
+              </label>
+              <Input
+                id="member-search"
+                value={memberSearch}
+                maxLength={100}
+                placeholder="Name or email"
+                onChange={(event) => {
+                  setMemberSearch(event.target.value);
+                  setMemberPage(1);
+                }}
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="member-role" className="text-sm font-medium text-ink">
+                Role
+              </label>
+              <select
+                id="member-role"
+                value={roleFilter}
+                onChange={(event) => {
+                  setRoleFilter(event.target.value);
+                  setMemberPage(1);
+                }}
+                className="rounded-md border border-line bg-surface px-2 py-2 text-sm"
+              >
+                <option value="">All roles</option>
+                <option value="OWNER">Owner</option>
+                <option value="ADMIN">Admin</option>
+                <option value="MEMBER">Member</option>
+                <option value="GUEST">Guest</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="member-status" className="text-sm font-medium text-ink">
+                Status
+              </label>
+              <select
+                id="member-status"
+                value={statusFilter}
+                onChange={(event) => {
+                  setStatusFilter(event.target.value);
+                  setMemberPage(1);
+                }}
+                className="rounded-md border border-line bg-surface px-2 py-2 text-sm"
+              >
+                <option value="">All statuses</option>
+                <option value="ACTIVE">Active</option>
+                <option value="INVITED">Invited</option>
+                <option value="SUSPENDED">Suspended</option>
+                <option value="REMOVED">Removed</option>
+              </select>
+            </div>
+          </div>
           {membersQuery.isLoading ? (
             <p className="text-muted">Loading members…</p>
           ) : membersQuery.isError ? (
@@ -215,10 +302,33 @@ export function MembersPage() {
                 </tbody>
               </table>
               {membersQuery.data?.items.length === 0 ? (
-                <p className="text-muted">No members.</p>
+                <p className="text-muted">No members match these filters.</p>
               ) : null}
             </div>
           )}
+          {membersQuery.data && membersQuery.data.total > 20 ? (
+            <div className="mt-4 flex items-center gap-3 text-sm">
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={memberPage <= 1}
+                onClick={() => setMemberPage((page) => Math.max(1, page - 1))}
+              >
+                Previous
+              </Button>
+              <span className="text-muted">
+                Page {memberPage} of {Math.ceil(membersQuery.data.total / 20)}
+              </span>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={memberPage * 20 >= membersQuery.data.total}
+                onClick={() => setMemberPage((page) => page + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -267,7 +377,7 @@ export function MembersPage() {
       ) : null}
 
       {isOwner ? (
-        <Card>
+        <Card id="invitations">
           <CardHeader>
             <CardTitle>Pending invitations</CardTitle>
           </CardHeader>

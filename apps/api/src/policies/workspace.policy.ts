@@ -66,6 +66,18 @@ export function isLastOwnerProtected(targetRole: WorkspaceRole, activeOwnerCount
   return targetRole === 'OWNER' && activeOwnerCount <= 1;
 }
 
+export function canManageWorkspaceSettings(role: WorkspaceRole): boolean {
+  return role === 'OWNER' || role === 'ADMIN';
+}
+
+export function canChangeSlug(role: WorkspaceRole): boolean {
+  return role === 'OWNER';
+}
+
+export function canTransferOwnership(role: WorkspaceRole): boolean {
+  return role === 'OWNER';
+}
+
 export function roleRank(role: WorkspaceRole): number {
   return ROLE_RANK[role];
 }

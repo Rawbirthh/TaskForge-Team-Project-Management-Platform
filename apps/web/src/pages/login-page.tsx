@@ -36,19 +36,33 @@ export function LoginPage() {
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={handleSubmit}>
+            {/* Absorb browser/password-manager autofill so the visible fields stay empty. */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -left-[9999px] h-0 w-0 overflow-hidden"
+            >
+              <input type="text" autoComplete="username" tabIndex={-1} />
+              <input type="password" autoComplete="current-password" tabIndex={-1} />
+            </div>
             <div className="space-y-1">
               <label className="text-sm font-medium text-ink" htmlFor="email">
                 Email
               </label>
               <Input
                 id="email"
-                name="email"
+                name="taskforge-email"
                 type="email"
                 required
-                defaultValue={email}
+                value={email}
+                placeholder="you@example.com"
                 onChange={(event) => setEmail(event.target.value)}
-                onFocus={(event) => setEmail(event.target.value)}
-                autoComplete="email"
+                onFocus={(event) => {
+                  // Browsers can autofill a controlled input without firing onChange.
+                  // Clear only when React state is still empty, never user-typed text.
+                  if (email === '' && event.target.value !== '') event.target.value = '';
+                }}
+                autoComplete="off"
+                data-form-type="other"
               />
             </div>
             <div className="space-y-1">
@@ -57,13 +71,17 @@ export function LoginPage() {
               </label>
               <Input
                 id="password"
-                name="password"
+                name="taskforge-password"
                 type="password"
                 required
-                defaultValue={password}
+                value={password}
+                placeholder="Enter your password"
                 onChange={(event) => setPassword(event.target.value)}
-                onFocus={(event) => setPassword(event.target.value)}
-                autoComplete="current-password"
+                onFocus={(event) => {
+                  if (password === '' && event.target.value !== '') event.target.value = '';
+                }}
+                autoComplete="new-password"
+                data-form-type="other"
               />
             </div>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}

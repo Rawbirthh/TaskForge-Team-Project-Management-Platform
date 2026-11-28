@@ -5,6 +5,8 @@ export interface WorkspaceSummary {
   id: string;
   name: string;
   slug: string;
+  description: string | null;
+  logoUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,4 +43,16 @@ export interface CreateWorkspaceInput {
 export interface SlugAvailabilityResponse {
   slug: string;
   available: boolean;
+}
+
+export interface UpdateWorkspaceSettingsInput {
+  name?: string;
+  slug?: string;
+  description?: string | null;
+  logoUrl?: string | null;
+}
+
+export interface TransferOwnershipInput {
+  targetMembershipId: string;
+  currentPassword: string;
 }

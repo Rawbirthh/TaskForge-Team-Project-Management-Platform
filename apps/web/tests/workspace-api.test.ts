@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createWorkspace, listWorkspaces } from '@/features/workspaces/workspace-api';
+import {
+  createWorkspace,
+  listWorkspaces,
+  transferOwnership,
+  updateWorkspace,
+} from '@/features/workspaces/workspace-api';
 import { apiRequest } from '@/lib/api-client';
 
 vi.mock('@/lib/api-client', () => ({
@@ -33,6 +38,36 @@ describe('workspace API', () => {
     expect(apiRequestMock).toHaveBeenCalledWith('/workspaces', {
       method: 'POST',
       body: { name: 'Acme', slug: 'acme' },
+    });
+  });
+
+  it('updates workspace settings with PATCH', async () => {
+    apiRequestMock.mockResolvedValue({ workspace: { id: 'ws_1' } });
+
+    const result = await updateWorkspace('ws_1', { name: 'New name', description: null });
+
+    expect(result.workspace.id).toBe('ws_1');
+    expect(apiRequestMock).toHaveBeenCalledWith('/workspaces/ws_1', {
+      method: 'PATCH',
+      body: { name: 'New name', description: null },
+    });
+  });
+
+  it('transfers ownership with a re-authenticated POST', async () => {
+    apiRequestMock.mockResolvedValue({
+      workspace: { id: 'ws_1' },
+      membership: { id: 'mem_2', role: 'OWNER', status: 'ACTIVE' },
+    });
+
+    const result = await transferOwnership('ws_1', {
+      targetMembershipId: 'mem_2',
+      currentPassword: 'password123456',
+    });
+
+    expect(result.membership.role).toBe('OWNER');
+    expect(apiRequestMock).toHaveBeenCalledWith('/workspaces/ws_1/ownership/transfer', {
+      method: 'POST',
+      body: { targetMembershipId: 'mem_2', currentPassword: 'password123456' },
     });
   });
 });

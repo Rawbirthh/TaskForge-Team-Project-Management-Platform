@@ -7,14 +7,23 @@ import type {
   UpdateMemberInput,
 } from '@/types/membership';
 
+export interface MemberListFilters {
+  role?: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST';
+  status?: 'ACTIVE' | 'INVITED' | 'SUSPENDED' | 'REMOVED';
+  q?: string;
+}
+
 export function listMembers(
   workspaceId: string,
   page = 1,
   limit = 20,
+  filters: MemberListFilters = {},
 ): Promise<MemberListResponse> {
-  return apiRequest<MemberListResponse>(
-    `/workspaces/${workspaceId}/members?page=${page}&limit=${limit}`,
-  );
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (filters.role) params.set('role', filters.role);
+  if (filters.status) params.set('status', filters.status);
+  if (filters.q) params.set('q', filters.q);
+  return apiRequest<MemberListResponse>(`/workspaces/${workspaceId}/members?${params}`);
 }
 
 export function updateMember(

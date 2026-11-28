@@ -57,7 +57,33 @@ export const slugAvailabilityQuerySchema = z.object({
   slug: slugSchema,
 });
 
+export const updateWorkspaceSettingsSchema = z
+  .object({
+    name: z.string().trim().min(1).max(80).optional(),
+    slug: slugSchema.optional(),
+    description: z.string().trim().max(500).nullable().optional(),
+    logoUrl: z
+      .string()
+      .url()
+      .max(500)
+      .refine((value) => value.startsWith('http://') || value.startsWith('https://'), {
+        message: 'Logo URL must use http or https',
+      })
+      .nullable()
+      .optional(),
+  })
+  .refine((value) => Object.values(value).some((field) => field !== undefined), {
+    message: 'At least one workspace setting is required',
+  });
+
+export const transferOwnershipSchema = z.object({
+  targetMembershipId: z.string().min(1).max(64),
+  currentPassword: z.string().min(1).max(128),
+});
+
 export type CreateWorkspaceInput = z.infer<typeof createWorkspaceSchema>;
 export type WorkspaceIdParamInput = z.infer<typeof workspaceIdParamSchema>;
 export type WorkspaceListQueryInput = z.infer<typeof workspaceListQuerySchema>;
 export type SlugAvailabilityQueryInput = z.infer<typeof slugAvailabilityQuerySchema>;
+export type UpdateWorkspaceSettingsInput = z.infer<typeof updateWorkspaceSettingsSchema>;
+export type TransferOwnershipInput = z.infer<typeof transferOwnershipSchema>;

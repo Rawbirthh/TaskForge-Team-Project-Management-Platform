@@ -2,6 +2,8 @@ import { apiRequest } from '@/lib/api-client';
 import type {
   CreateWorkspaceInput,
   SlugAvailabilityResponse,
+  TransferOwnershipInput,
+  UpdateWorkspaceSettingsInput,
   WorkspaceDetailResponse,
   WorkspaceListResponse,
   WorkspaceSummary,
@@ -28,4 +30,27 @@ export function checkSlugAvailability(slug: string): Promise<SlugAvailabilityRes
   return apiRequest<SlugAvailabilityResponse>(
     `/workspaces/slug-availability?slug=${encodeURIComponent(slug)}`,
   );
+}
+
+export function updateWorkspace(
+  workspaceId: string,
+  input: UpdateWorkspaceSettingsInput,
+): Promise<{ workspace: WorkspaceSummary }> {
+  return apiRequest<{ workspace: WorkspaceSummary }>(`/workspaces/${workspaceId}`, {
+    method: 'PATCH',
+    body: input,
+  });
+}
+
+export function transferOwnership(
+  workspaceId: string,
+  input: TransferOwnershipInput,
+): Promise<{
+  workspace: WorkspaceSummary;
+  membership: { id: string; userId: string; role: 'OWNER'; status: 'ACTIVE' };
+}> {
+  return apiRequest(`/workspaces/${workspaceId}/ownership/transfer`, {
+    method: 'POST',
+    body: input,
+  });
 }

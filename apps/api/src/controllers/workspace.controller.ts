@@ -4,11 +4,15 @@ import {
   createWorkspace,
   getWorkspace,
   listWorkspaces,
+  transferOwnership,
+  updateWorkspaceSettings,
 } from '../services/workspace.service.js';
 import { validate, getValidated } from '../middleware/validate.js';
 import {
   createWorkspaceSchema,
   slugAvailabilityQuerySchema,
+  transferOwnershipSchema,
+  updateWorkspaceSettingsSchema,
   workspaceIdParamSchema,
   workspaceListQuerySchema,
 } from '../schemas/workspace.schemas.js';
@@ -75,6 +79,43 @@ export const workspaceController = {
           'query',
         );
         const result = await checkSlugAvailability(query.slug);
+        res.status(200).json({ data: result });
+      } catch (error) {
+        next(error);
+      }
+    },
+  ],
+
+  update: [
+    validate({ params: workspaceIdParamSchema, body: updateWorkspaceSettingsSchema }),
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        if (!req.auth) {
+          throw new AppError(401, 'UNAUTHENTICATED', 'Authentication required');
+        }
+        const params = getValidated<ReturnType<typeof workspaceIdParamSchema.parse>>(req, 'params');
+        const body = getValidated<ReturnType<typeof updateWorkspaceSettingsSchema.parse>>(
+          req,
+          'body',
+        );
+        const workspace = await updateWorkspaceSettings(params.workspaceId, req.auth.userId, body);
+        res.status(200).json({ data: { workspace } });
+      } catch (error) {
+        next(error);
+      }
+    },
+  ],
+
+  transferOwnership: [
+    validate({ params: workspaceIdParamSchema, body: transferOwnershipSchema }),
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        if (!req.auth) {
+          throw new AppError(401, 'UNAUTHENTICATED', 'Authentication required');
+        }
+        const params = getValidated<ReturnType<typeof workspaceIdParamSchema.parse>>(req, 'params');
+        const body = getValidated<ReturnType<typeof transferOwnershipSchema.parse>>(req, 'body');
+        const result = await transferOwnership(params.workspaceId, req.auth.userId, body);
         res.status(200).json({ data: result });
       } catch (error) {
         next(error);
