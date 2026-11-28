@@ -4,6 +4,7 @@ import { PublicLayout } from '@/components/layout/public-layout';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { DashboardPage } from '@/pages/dashboard-page';
 import { ProfilePage } from '@/pages/profile-page';
+import { WorkspaceCreatePage } from '@/pages/workspace-create-page';
 import { ForgotPasswordPage } from '@/pages/forgot-password-page';
 import { LandingPage } from '@/pages/landing-page';
 import { LoginPage } from '@/pages/login-page';
@@ -68,6 +69,7 @@ export const routes: RouteObject[] = [
         children: [
           { index: true, element: <DashboardPage /> },
           { path: 'profile', element: <ProfilePage /> },
+          { path: 'workspaces/new', element: <WorkspaceCreatePage /> },
         ],
       },
     ],

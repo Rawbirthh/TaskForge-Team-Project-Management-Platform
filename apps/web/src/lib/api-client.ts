@@ -1,3 +1,5 @@
+import axios, { type AxiosError } from 'axios';
+
 const DEFAULT_API_BASE_URL = '/api/v1';
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, '');
@@ -41,6 +43,8 @@ export class ApiError extends Error {
 
 export interface ApiRequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
+  method?: string;
+  signal?: AbortSignal;
 }
 
 interface ApiErrorPayload {
@@ -51,6 +55,12 @@ interface ApiErrorPayload {
     details?: unknown;
   };
 }
+
+const instance = axios.create({
+  baseURL: apiBaseUrl,
+  withCredentials: true,
+  headers: { Accept: 'application/json' },
+});
 
 /**
  * Stores the short-lived access token in memory only. The refresh token remains
@@ -85,63 +95,6 @@ function toApiError(status: number, payload: unknown): ApiError {
   return new ApiError(status, 'UNKNOWN_ERROR', 'The request failed. Please try again.');
 }
 
-async function parseResponse<T>(response: Response): Promise<T> {
-  const contentType = response.headers.get('content-type') ?? '';
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  if (!contentType.includes('application/json')) {
-    if (!response.ok) {
-      throw new ApiError(response.status, 'UNKNOWN_ERROR', 'The request failed. Please try again.');
-    }
-    return undefined as T;
-  }
-
-  const payload: unknown = await response.json();
-
-  if (!response.ok) {
-    throw toApiError(response.status, payload);
-  }
-
-  return (payload as { data: T }).data;
-}
-
-function buildUrl(path: string): string {
-  return `${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
-}
-
-function isAuthEndpoint(path: string): boolean {
-  return path === '/auth/refresh' || path === '/auth/login' || path === '/auth/register';
-}
-
-async function sendRequest(
-  url: string,
-  options: ApiRequestOptions,
-  token: string | null,
-): Promise<Response> {
-  const { body, headers, ...init } = options;
-
-  const requestHeaders = new Headers(headers);
-  requestHeaders.set('Accept', 'application/json');
-
-  if (body !== undefined) {
-    requestHeaders.set('Content-Type', 'application/json');
-  }
-
-  if (token) {
-    requestHeaders.set('Authorization', `Bearer ${token}`);
-  }
-
-  return fetch(url, {
-    ...init,
-    credentials: 'include',
-    headers: requestHeaders,
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-  });
-}
-
 async function refreshAccessTokenOnce(): Promise<string | null> {
   if (refreshPromise) {
     return refreshPromise;
@@ -162,23 +115,71 @@ async function refreshAccessTokenOnce(): Promise<string | null> {
   return refreshPromise;
 }
 
+function isAuthEndpoint(path: string): boolean {
+  return path === '/auth/refresh' || path === '/auth/login' || path === '/auth/register';
+}
+
+function buildPath(path: string): string {
+  return path.startsWith('/') ? path : `/${path}`;
+}
+
 /**
- * Typed fetch wrapper for the TaskForge API.
+ * Typed request wrapper for the TaskForge API, backed by Axios.
  *
  * - Sends the in-memory access token when present.
  * - Uses the refresh cookie once on a 401, then retries the original request.
  * - Parses the shared `{ data }` / `{ error }` API envelope into typed values.
  */
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  const url = buildUrl(path);
-  let response = await sendRequest(url, options, authHooks.getAccessToken());
+  const url = buildPath(path);
+  const method = (options.method ?? 'GET').toUpperCase();
 
-  if (response.status === 401 && !isAuthEndpoint(path)) {
-    const refreshedToken = await refreshAccessTokenOnce();
-    if (refreshedToken) {
-      response = await sendRequest(url, options, refreshedToken);
-    }
+  const headers: Record<string, string> = {};
+  if (options.headers) {
+    const h = new Headers(options.headers);
+    h.forEach((value, key) => {
+      headers[key] = value;
+    });
   }
 
-  return parseResponse<T>(response);
+  const token = authHooks.getAccessToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const config: Record<string, unknown> = {
+    url,
+    method,
+    headers,
+    data: options.body,
+    withCredentials: true,
+  };
+  if (options.signal) {
+    config.signal = options.signal;
+  }
+
+  try {
+    const response = await instance.request(config as never);
+    const payload = response.data as { data?: T };
+    return (payload?.data ?? undefined) as T;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response?.status === 401 && !isAuthEndpoint(path)) {
+        const refreshedToken = await refreshAccessTokenOnce();
+        if (refreshedToken) {
+          const retryHeaders = { ...headers, Authorization: `Bearer ${refreshedToken}` };
+          const retryConfig: Record<string, unknown> = { ...config, headers: retryHeaders };
+          const retryResponse = await instance.request(retryConfig as never);
+          const retryPayload = retryResponse.data as { data?: T };
+          return (retryPayload?.data ?? undefined) as T;
+        }
+      }
+
+      const status = axiosError.response?.status ?? 0;
+      throw toApiError(status, axiosError.response?.data);
+    }
+
+    throw error;
+  }
 }

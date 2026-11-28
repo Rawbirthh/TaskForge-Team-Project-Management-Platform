@@ -13,6 +13,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router';
 import { useAuth } from '@/features/auth/auth-context';
 import { Brand } from '@/components/brand';
 import { Badge } from '@/components/ui/badge';
+import { WorkspaceSwitcher } from '@/components/layout/workspace-switcher';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -164,10 +165,7 @@ export function AppShell() {
               <Menu className="size-5" aria-hidden="true" />
             </Button>
 
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium tracking-wide text-muted uppercase">Workspace</p>
-              <p className="truncate text-sm font-semibold text-ink">Foundation workspace</p>
-            </div>
+            <WorkspaceSwitcher />
 
             <Badge variant="info" className="hidden sm:inline-flex">
               Foundation

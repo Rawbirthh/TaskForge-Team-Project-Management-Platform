@@ -4,20 +4,43 @@ import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider, useAuth } from '@/features/auth/auth-context';
 
-function mockResponse(payload: unknown, status = 200): Response {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    headers: new Headers({ 'content-type': 'application/json' }),
-    json: () => Promise.resolve(payload),
-  } as Response;
-}
+const refreshCallsRef = { current: 0 };
+let firstRefresh: Promise<unknown> | null = null;
 
-function requestUrl(input: RequestInfo | URL): string {
-  if (typeof input === 'string') return input;
-  if (input instanceof URL) return input.href;
-  return input.url;
-}
+vi.mock('@/lib/api-client', () => ({
+  apiRequest: vi.fn(async (path: string) => {
+    if (path.endsWith('/auth/refresh')) {
+      refreshCallsRef.current += 1;
+      if (!firstRefresh) {
+        firstRefresh = Promise.resolve({ accessToken: 'restored-token' });
+        return firstRefresh;
+      }
+      await firstRefresh;
+      throw new Error('Refresh token reuse detected');
+    }
+
+    if (path.endsWith('/me')) {
+      return {
+        id: 'user-1',
+        email: 'user@example.com',
+        displayName: 'Test User',
+        timeZone: 'UTC',
+        locale: null,
+        avatarUrl: null,
+        pendingEmail: null,
+        emailVerifiedAt: null,
+        deactivatedAt: null,
+        deletionRequestedAt: null,
+        createdAt: new Date().toISOString(),
+      };
+    }
+
+    return {};
+  }),
+  configureAuthHooks: vi.fn(),
+  setAccessToken: vi.fn(),
+  resetAuthHooks: vi.fn(),
+}));
 
 function AuthState() {
   const { accessToken, isRestoring } = useAuth();
@@ -42,62 +65,17 @@ function renderAuthProvider() {
 
 describe('session restore', () => {
   afterEach(() => {
-    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+    refreshCallsRef.current = 0;
+    firstRefresh = null;
   });
 
   it('refreshes only once under StrictMode and keeps the restored token', async () => {
-    let refreshCalls = 0;
-    let firstRefresh: Promise<Response> | null = null;
-
-    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
-      const url = requestUrl(input);
-
-      if (url.endsWith('/auth/refresh')) {
-        refreshCalls += 1;
-        if (!firstRefresh) {
-          firstRefresh = Promise.resolve(mockResponse({ data: { accessToken: 'restored-token' } }));
-          return firstRefresh;
-        }
-        return firstRefresh.then(() =>
-          mockResponse(
-            {
-              error: {
-                code: 'REFRESH_TOKEN_REUSED',
-                message: 'Refresh token reuse detected',
-              },
-            },
-            401,
-          ),
-        );
-      }
-
-      if (url.endsWith('/me')) {
-        return mockResponse({
-          data: {
-            id: 'user-1',
-            email: 'user@example.com',
-            displayName: 'Test User',
-            timeZone: 'UTC',
-            locale: null,
-            avatarUrl: null,
-            pendingEmail: null,
-            emailVerifiedAt: null,
-            deactivatedAt: null,
-            deletionRequestedAt: null,
-            createdAt: new Date().toISOString(),
-          },
-        });
-      }
-
-      return mockResponse({ data: {} });
-    });
-    vi.stubGlobal('fetch', fetchMock);
-
     renderAuthProvider();
 
     await waitFor(() => {
       expect(screen.getByTestId('auth-state')).toHaveTextContent('restored-token');
     });
-    expect(refreshCalls).toBe(1);
+    expect(refreshCallsRef.current).toBe(1);
   });
 });

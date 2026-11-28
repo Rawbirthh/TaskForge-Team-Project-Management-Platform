@@ -8,10 +8,12 @@ import {
   Server,
 } from 'lucide-react';
 import { Link } from 'react-router';
+import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button-variants';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ApiStatusCard } from '@/features/foundation/api-status-card';
+import { listWorkspaces } from '@/features/workspaces/workspace-api';
 import { SetupCommandsDialog } from '@/features/foundation/setup-commands-dialog';
 
 type FoundationStatus = 'ready' | 'configured' | 'next';
@@ -70,8 +72,31 @@ const outOfScope = [
 ];
 
 export function DashboardPage() {
+  const { data: workspaces } = useQuery({
+    queryKey: ['workspaces', { scope: 'dashboard' }],
+    queryFn: () => listWorkspaces(1, 1),
+  });
   return (
     <div className="space-y-8">
+      {workspaces && workspaces.items.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Create your first workspace</CardTitle>
+            <CardDescription>
+              You do not have any workspaces yet. Create one to start organizing projects and teams.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link
+              to="/app/workspaces/new"
+              className={buttonVariants({ variant: 'primary', size: 'sm', className: 'w-fit' })}
+            >
+              Create workspace
+            </Link>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-muted">Workspace</p>

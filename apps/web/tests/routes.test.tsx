@@ -29,25 +29,6 @@ describe('application routes', () => {
   });
 
   it('renders the app shell and dashboard at /app', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        headers: new Headers({ 'content-type': 'application/json' }),
-        json: () =>
-          Promise.resolve({
-            data: {
-              status: 'ok',
-              service: 'taskforge-api',
-              version: '0.1.0',
-              uptimeSeconds: 5,
-              timestamp: new Date().toISOString(),
-            },
-          }),
-      }),
-    );
-
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });

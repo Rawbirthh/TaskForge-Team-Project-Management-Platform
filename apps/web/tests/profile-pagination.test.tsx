@@ -10,20 +10,23 @@ vi.mock('@/features/auth/auth-context', () => ({
   useAuth: () => ({ logout: logoutMock }),
 }));
 
-function mockResponse(payload: unknown): Response {
-  return {
-    ok: true,
-    status: 200,
-    headers: new Headers({ 'content-type': 'application/json' }),
-    json: () => Promise.resolve(payload),
-  } as Response;
-}
-
-function requestUrl(input: RequestInfo | URL): string {
-  if (typeof input === 'string') return input;
-  if (input instanceof URL) return input.href;
-  return input.url;
-}
+vi.mock('@/lib/api-client', () => ({
+  apiRequest: vi.fn((path: string) => {
+    if (path.includes('/users/me/profile')) {
+      return Promise.resolve({ profile });
+    }
+    if (path.includes('/users/me/sessions')) {
+      if (path.includes('cursor=')) {
+        return Promise.resolve({ sessions: [session('session-2', 'Firefox')], nextCursor: null });
+      }
+      return Promise.resolve({
+        sessions: [session('session-1', 'Chrome')],
+        nextCursor: 'cursor-2',
+      });
+    }
+    return Promise.resolve({ data: {} });
+  }),
+}));
 
 const profile = {
   id: 'user-1',
@@ -53,33 +56,11 @@ function session(id: string, userAgent: string) {
 
 describe('profile sessions pagination', () => {
   afterEach(() => {
-    vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
   it('shows one page at a time and navigates with Previous and Next', async () => {
     const user = userEvent.setup();
-    const fetchMock = vi.fn((input: RequestInfo | URL) => {
-      const url = requestUrl(input);
-      if (url.includes('/users/me/profile')) {
-        return Promise.resolve(mockResponse({ data: { profile } }));
-      }
-      if (url.includes('/users/me/sessions')) {
-        if (url.includes('cursor=')) {
-          return Promise.resolve(
-            mockResponse({
-              data: { sessions: [session('session-2', 'Firefox')], nextCursor: null },
-            }),
-          );
-        }
-        return Promise.resolve(
-          mockResponse({
-            data: { sessions: [session('session-1', 'Chrome')], nextCursor: 'cursor-2' },
-          }),
-        );
-      }
-      return Promise.resolve(mockResponse({ data: {} }));
-    });
-    vi.stubGlobal('fetch', fetchMock);
 
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },

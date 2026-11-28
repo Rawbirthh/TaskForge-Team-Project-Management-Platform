@@ -36,6 +36,7 @@ model User {
   passwordResetTokens     PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
   emailChangeTokens       EmailChangeToken[]
+  workspaceMemberships    WorkspaceMembership[]
 
   @@map("users")
 }
@@ -52,6 +53,54 @@ model EmailChangeToken {
 
   @@index([userId])
   @@map("email_change_tokens")
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  GUEST
+
+  @@map("workspace_role")
+}
+
+enum WorkspaceMembershipStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+  REMOVED
+
+  @@map("workspace_membership_status")
+}
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(80)
+  slug        String   @unique @db.VarChar(48)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  memberships WorkspaceMembership[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMembership {
+  id          String                   @id @default(cuid())
+  workspaceId String                   @map("workspace_id")
+  userId      String                   @map("user_id")
+  role        WorkspaceRole            @default(MEMBER)
+  status      WorkspaceMembershipStatus @default(ACTIVE)
+  createdAt   DateTime                 @default(now()) @map("created_at")
+  updatedAt   DateTime                 @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId, status])
+  @@index([workspaceId, status])
+  @@map("workspace_memberships")
 }
 
 model Session {

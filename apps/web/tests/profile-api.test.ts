@@ -1,44 +1,32 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { listSessions } from '@/features/profile/profile-api';
+import { apiRequest } from '@/lib/api-client';
 
-function mockResponse(payload: unknown): Response {
-  return {
-    ok: true,
-    status: 200,
-    headers: new Headers({ 'content-type': 'application/json' }),
-    json: () => Promise.resolve(payload),
-  } as Response;
-}
+vi.mock('@/lib/api-client', () => ({
+  apiRequest: vi.fn(),
+}));
+
+const apiRequestMock = vi.mocked(apiRequest);
 
 describe('profile API', () => {
   afterEach(() => {
-    vi.unstubAllGlobals();
+    apiRequestMock.mockReset();
   });
 
   it('requests the first sessions page without a cursor', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(mockResponse({ data: { sessions: [], nextCursor: null } }));
-    vi.stubGlobal('fetch', fetchMock);
+    apiRequestMock.mockResolvedValue({ sessions: [], nextCursor: null });
 
     const result = await listSessions();
 
     expect(result).toEqual({ sessions: [], nextCursor: null });
-    expect(fetchMock).toHaveBeenCalledWith(
-      '/api/v1/users/me/sessions',
-      expect.objectContaining({ credentials: 'include' }),
-    );
+    expect(apiRequestMock).toHaveBeenCalledWith('/users/me/sessions');
   });
 
   it('encodes the cursor when requesting a later sessions page', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(mockResponse({ data: { sessions: [], nextCursor: null } }));
-    vi.stubGlobal('fetch', fetchMock);
+    apiRequestMock.mockResolvedValue({ sessions: [], nextCursor: null });
 
     await listSessions('cursor/with spaces');
 
-    const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe('/api/v1/users/me/sessions?cursor=cursor%2Fwith%20spaces');
+    expect(apiRequestMock).toHaveBeenCalledWith('/users/me/sessions?cursor=cursor%2Fwith%20spaces');
   });
 });
