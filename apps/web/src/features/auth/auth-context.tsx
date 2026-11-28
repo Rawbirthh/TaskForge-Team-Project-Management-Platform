@@ -74,8 +74,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     enabled: Boolean(accessToken),
   });
 
+  const clearSessionCaches = useCallback(() => {
+    // Prevent stale data from a previous user leaking into the new session
+    // (e.g. workspace lists showing the previous user's workspaces).
+    queryClient.clear();
+    try {
+      window.localStorage.removeItem('taskforge:selectedWorkspaceId');
+      window.dispatchEvent(
+        new StorageEvent('storage', { key: 'taskforge:selectedWorkspaceId', newValue: null }),
+      );
+    } catch {
+      // ignore
+    }
+  }, [queryClient]);
+
   const login = useCallback(
     async (email: string, password: string) => {
+      clearSessionCaches();
       const response = await apiRequest<AuthResponse>('/auth/login', {
         method: 'POST',
         body: { email, password },
@@ -84,11 +99,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAccessToken(response.accessToken);
       await queryClient.invalidateQueries({ queryKey: ['me'] });
     },
-    [queryClient],
+    [queryClient, clearSessionCaches],
   );
 
   const register = useCallback(
     async (email: string, password: string, displayName?: string) => {
+      clearSessionCaches();
       const response = await apiRequest<AuthResponse>('/auth/register', {
         method: 'POST',
         body: { email, password, displayName },
@@ -97,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAccessToken(response.accessToken);
       await queryClient.invalidateQueries({ queryKey: ['me'] });
     },
-    [queryClient],
+    [queryClient, clearSessionCaches],
   );
 
   const logout = useCallback(async () => {
@@ -106,9 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setAccessTokenState(null);
       setAccessToken(null);
-      queryClient.removeQueries({ queryKey: ['me'] });
+      clearSessionCaches();
     }
-  }, [queryClient]);
+  }, [clearSessionCaches]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

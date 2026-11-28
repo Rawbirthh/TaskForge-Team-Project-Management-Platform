@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Toaster } from 'sonner';
 import { queryClient } from '@/lib/query-client';
 import { AuthProvider } from '@/features/auth/auth-context';
+import { SelectedWorkspaceProvider } from '@/features/workspaces/selected-workspace-context';
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -11,7 +12,9 @@ interface AppProvidersProps {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>{children}</AuthProvider>
+      <AuthProvider>
+        <SelectedWorkspaceProvider>{children}</SelectedWorkspaceProvider>
+      </AuthProvider>
       <Toaster position="top-right" richColors closeButton />
     </QueryClientProvider>
   );

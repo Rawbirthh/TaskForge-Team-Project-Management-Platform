@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Plus } from 'lucide-react';
 import { listWorkspaces } from '@/features/workspaces/workspace-api';
+import { useSelectedWorkspace } from '@/features/workspaces/selected-workspace-context';
 
 import {
   DropdownMenu,
@@ -14,50 +15,42 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/cn';
 
-const SELECTED_WORKSPACE_KEY = 'taskforge:selectedWorkspaceId';
-
 export function WorkspaceSwitcher() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
+  const { selectedWorkspaceId, setSelectedWorkspaceId } = useSelectedWorkspace();
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ['workspaces', { scope: 'switcher' }],
     queryFn: () => listWorkspaces(1, 50),
   });
 
-  const [selectedId, setSelectedId] = useState<string | null>(() =>
-    window.localStorage.getItem(SELECTED_WORKSPACE_KEY),
-  );
-
+  // Keep the selected workspace in sync with the available list.
   useEffect(() => {
     if (!data) return;
     const ids = new Set(data.items.map((item) => item.workspace.id));
-    const stored = window.localStorage.getItem(SELECTED_WORKSPACE_KEY);
-
-    if (stored && ids.has(stored)) {
-      setSelectedId(stored);
+    if (selectedWorkspaceId && ids.has(selectedWorkspaceId)) {
       return;
     }
-
     if (data.items.length === 0) {
-      window.localStorage.removeItem(SELECTED_WORKSPACE_KEY);
-      setSelectedId(null);
+      setSelectedWorkspaceId(null);
       return;
     }
+    const first = data.items[0]?.workspace.id;
+    if (first) setSelectedWorkspaceId(first);
+  }, [data, selectedWorkspaceId, setSelectedWorkspaceId]);
 
-    if (!selectedId) {
-      const first = data.items[0]?.workspace.id;
-      if (first) {
-        window.localStorage.setItem(SELECTED_WORKSPACE_KEY, first);
-        setSelectedId(first);
-      }
-    }
-  }, [data, selectedId]);
-
-  const selected = data?.items.find((item) => item.workspace.id === selectedId) ?? data?.items[0];
+  const selected =
+    data?.items.find((item) => item.workspace.id === selectedWorkspaceId) ?? data?.items[0];
 
   function handleSelect(workspaceId: string) {
-    window.localStorage.setItem(SELECTED_WORKSPACE_KEY, workspaceId);
-    setSelectedId(workspaceId);
+    setSelectedWorkspaceId(workspaceId);
+    const match = location.pathname.match(/^\/app\/workspaces\/[^/]+(\/.*)?$/);
+    if (match) {
+      const suffix = match[1] ?? '';
+      void navigate(`/app/workspaces/${workspaceId}${suffix}`, { replace: true });
+    }
     void queryClient.invalidateQueries();
   }
 
@@ -109,7 +102,7 @@ export function WorkspaceSwitcher() {
               onSelect={() => handleSelect(item.workspace.id)}
               className={cn(
                 'flex items-center justify-between gap-2',
-                item.workspace.id === selectedId && 'font-semibold',
+                item.workspace.id === selectedWorkspaceId && 'font-semibold',
               )}
             >
               <span className="truncate">{item.workspace.name}</span>
@@ -117,6 +110,13 @@ export function WorkspaceSwitcher() {
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />
+          {selectedWorkspaceId ? (
+            <DropdownMenuItem
+              onSelect={() => void navigate(`/app/workspaces/${selectedWorkspaceId}/members`)}
+            >
+              Members
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem onSelect={() => void navigate('/app/workspaces/new')}>
             <Plus className="size-4" aria-hidden="true" />
             Create workspace

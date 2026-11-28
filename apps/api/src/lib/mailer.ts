@@ -4,6 +4,12 @@ export interface Mailer {
   sendVerificationEmail(to: string, token: string): Promise<void>;
   sendPasswordResetEmail(to: string, token: string): Promise<void>;
   sendEmailChangeEmail(to: string, token: string): Promise<void>;
+  sendWorkspaceInvitationEmail(
+    to: string,
+    token: string,
+    workspaceName: string,
+    inviterName: string,
+  ): Promise<void>;
 }
 
 function verificationLink(token: string): string {
@@ -16,6 +22,10 @@ function resetLink(token: string): string {
 
 function emailChangeLink(token: string): string {
   return `${env.APP_PUBLIC_URL}/verify-email-change?token=${encodeURIComponent(token)}`;
+}
+
+function invitationLink(token: string): string {
+  return `${env.APP_PUBLIC_URL}/accept-invitation?token=${encodeURIComponent(token)}`;
 }
 
 const consoleMailer: Mailer = {
@@ -31,12 +41,19 @@ const consoleMailer: Mailer = {
     console.info(`[mail:console] email change link for ${to}: ${emailChangeLink(token)}`);
     return Promise.resolve();
   },
+  sendWorkspaceInvitationEmail: (to, _token, workspaceName, inviterName) => {
+    console.info(
+      `[mail:console] invitation for ${to} to workspace "${workspaceName}" from ${inviterName} (accept link sent via email)`,
+    );
+    return Promise.resolve();
+  },
 };
 
 const disabledMailer: Mailer = {
   sendVerificationEmail: () => Promise.resolve(),
   sendPasswordResetEmail: () => Promise.resolve(),
   sendEmailChangeEmail: () => Promise.resolve(),
+  sendWorkspaceInvitationEmail: () => Promise.resolve(),
 };
 
 async function sendSmtpMail(to: string, subject: string, text: string): Promise<void> {
@@ -78,6 +95,12 @@ const smtpMailer: Mailer = {
       to,
       'Verify your new TaskForge email',
       `Open this link to verify your new email address: ${emailChangeLink(token)}`,
+    ),
+  sendWorkspaceInvitationEmail: (to, token, workspaceName, inviterName) =>
+    sendSmtpMail(
+      to,
+      `You've been invited to ${workspaceName} on TaskForge`,
+      `${inviterName} invited you to join the workspace "${workspaceName}" on TaskForge.\n\nAccept your invitation: ${invitationLink(token)}\n\nThis invitation expires in ${env.INVITATION_TOKEN_TTL_DAYS} days.`,
     ),
 };
 

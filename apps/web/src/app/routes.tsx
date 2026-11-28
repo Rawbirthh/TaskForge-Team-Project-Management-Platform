@@ -5,6 +5,8 @@ import { ProtectedRoute } from '@/components/auth/protected-route';
 import { DashboardPage } from '@/pages/dashboard-page';
 import { ProfilePage } from '@/pages/profile-page';
 import { WorkspaceCreatePage } from '@/pages/workspace-create-page';
+import { MembersPage } from '@/pages/members-page';
+import { AcceptInvitationPage } from '@/pages/accept-invitation-page';
 import { ForgotPasswordPage } from '@/pages/forgot-password-page';
 import { LandingPage } from '@/pages/landing-page';
 import { LoginPage } from '@/pages/login-page';
@@ -59,6 +61,12 @@ export const routes: RouteObject[] = [
     children: [{ index: true, element: <VerifyEmailChangePage /> }],
   },
   {
+    path: '/accept-invitation',
+    element: <PublicLayout />,
+    errorElement: <RouteErrorPage />,
+    children: [{ index: true, element: <AcceptInvitationPage /> }],
+  },
+  {
     path: '/app',
     element: <ProtectedRoute />,
     errorElement: <RouteErrorPage />,
@@ -70,6 +78,7 @@ export const routes: RouteObject[] = [
           { index: true, element: <DashboardPage /> },
           { path: 'profile', element: <ProfilePage /> },
           { path: 'workspaces/new', element: <WorkspaceCreatePage /> },
+          { path: 'workspaces/:workspaceId/members', element: <MembersPage /> },
         ],
       },
     ],
