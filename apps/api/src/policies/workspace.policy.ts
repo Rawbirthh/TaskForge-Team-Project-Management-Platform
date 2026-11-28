@@ -78,6 +78,33 @@ export function canTransferOwnership(role: WorkspaceRole): boolean {
   return role === 'OWNER';
 }
 
+// Feature 10: project creation/management is limited to owners and admins until
+// Feature 11 introduces project-level roles.
+export function canCreateProject(role: WorkspaceRole): boolean {
+  return role === 'OWNER' || role === 'ADMIN';
+}
+
+export function canManageProject(role: WorkspaceRole): boolean {
+  return canCreateProject(role);
+}
+
+export function canArchiveProject(role: WorkspaceRole): boolean {
+  return canManageProject(role);
+}
+
+export function canRestoreProject(role: WorkspaceRole): boolean {
+  return canManageProject(role);
+}
+
+export function canReadProject(
+  role: WorkspaceRole,
+  project: { visibility: 'WORKSPACE' | 'PRIVATE'; createdByUserId: string },
+  actorUserId: string,
+): boolean {
+  if (project.visibility === 'WORKSPACE') return true;
+  return role === 'OWNER' || role === 'ADMIN' || project.createdByUserId === actorUserId;
+}
+
 export function roleRank(role: WorkspaceRole): number {
   return ROLE_RANK[role];
 }

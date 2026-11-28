@@ -7,6 +7,9 @@ import { ProfilePage } from '@/pages/profile-page';
 import { WorkspaceCreatePage } from '@/pages/workspace-create-page';
 import { MembersPage } from '@/pages/members-page';
 import { WorkspaceSettingsPage } from '@/pages/workspace-settings-page';
+import { ProjectsPage } from '@/pages/projects-page';
+import { ProjectCreatePage } from '@/pages/project-create-page';
+import { ProjectDetailPage } from '@/pages/project-detail-page';
 import { AcceptInvitationPage } from '@/pages/accept-invitation-page';
 import { ForgotPasswordPage } from '@/pages/forgot-password-page';
 import { LandingPage } from '@/pages/landing-page';
@@ -78,6 +81,9 @@ export const routes: RouteObject[] = [
         children: [
           { index: true, element: <DashboardPage /> },
           { path: 'profile', element: <ProfilePage /> },
+          { path: 'projects', element: <ProjectsPage /> },
+          { path: 'projects/new', element: <ProjectCreatePage /> },
+          { path: 'projects/:projectId', element: <ProjectDetailPage /> },
           { path: 'workspaces/new', element: <WorkspaceCreatePage /> },
           { path: 'workspaces/:workspaceId/settings', element: <WorkspaceSettingsPage /> },
           { path: 'workspaces/:workspaceId/members', element: <MembersPage /> },

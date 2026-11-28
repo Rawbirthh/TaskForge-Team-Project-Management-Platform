@@ -35,7 +35,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/app', end: true },
-  { label: 'Projects', icon: FolderKanban, soon: true },
+  { label: 'Projects', icon: FolderKanban, to: '/app/projects' },
   { label: 'My work', icon: ListTodo, soon: true },
   { label: 'Settings', icon: Settings, soon: true },
 ];

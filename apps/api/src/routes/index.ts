@@ -4,6 +4,7 @@ import { healthRouter } from './health.routes.js';
 import { authRouter } from './auth.routes.js';
 import { usersRouter } from './users.routes.js';
 import { workspacesRouter } from './workspaces.routes.js';
+import { projectsRouter } from './projects.routes.js';
 import { invitationsRouter } from './invitations.routes.js';
 import { requireAuth } from '../middleware/auth.js';
 import { authController } from '../controllers/auth.controller.js';
@@ -24,6 +25,7 @@ apiRouter.get('/', (_req, res) => {
 apiRouter.use('/health', healthRouter);
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/users', usersRouter);
+apiRouter.use('/workspaces/:workspaceId/projects', projectsRouter);
 apiRouter.use('/workspaces', workspacesRouter);
 apiRouter.use('/invitations', invitationsRouter);
 apiRouter.get('/me', requireAuth, ...authController.me);

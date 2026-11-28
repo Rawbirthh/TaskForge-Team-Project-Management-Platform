@@ -39,6 +39,7 @@ model User {
   workspaceMemberships      WorkspaceMembership[]
   workspaceInvitationsSent  WorkspaceInvitation[] @relation("WorkspaceInvitationsSent")
   workspaceInvitationsAccepted WorkspaceInvitation[] @relation("WorkspaceInvitationsAccepted")
+  createdProjects              Project[]
 
   @@map("users")
 }
@@ -86,6 +87,7 @@ model Workspace {
 
   memberships   WorkspaceMembership[]
   invitations  WorkspaceInvitation[]
+  projects      Project[]
 
   @@map("workspaces")
 }
@@ -173,4 +175,46 @@ model WorkspaceInvitation {
   @@index([workspaceId, email])
   @@index([workspaceId, createdAt])
   @@map("workspace_invitations")
+}
+
+enum ProjectVisibility {
+  WORKSPACE
+  PRIVATE
+
+  @@map("project_visibility")
+}
+
+enum ProjectStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+
+  @@map("project_status")
+}
+
+model Project {
+  id              String            @id @default(cuid())
+  workspaceId     String            @map("workspace_id")
+  key             String            @db.VarChar(16)
+  name            String            @db.VarChar(120)
+  description     String?           @db.VarChar(2000)
+  visibility      ProjectVisibility @default(WORKSPACE)
+  status          ProjectStatus     @default(ACTIVE)
+  startDate       DateTime?         @map("start_date") @db.Date
+  targetDate      DateTime?         @map("target_date") @db.Date
+  createdByUserId String            @map("created_by_user_id")
+  archivedAt      DateTime?         @map("archived_at")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User      @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([workspaceId, key])
+  @@unique([workspaceId, name])
+  @@index([workspaceId, status, visibility])
+  @@index([workspaceId, updatedAt, id])
+  @@index([workspaceId, createdAt])
+  @@map("projects")
 }
